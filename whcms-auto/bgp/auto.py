@@ -104,12 +104,11 @@ def check_and_handle_login(page, config):
     try:
         page.get(config['LOGIN_URL'])
         time.sleep(10)
+        print(page.html)
         if page.s_ele('text:欢迎回来'):
             page.stop_loading()
             return True
         else:
-            # 等待登录表单元素出现
-            page.wait.ele_displayed('#inputEmail', timeout=10)
             page('#inputEmail').input(config['EMAIL'])
             page('#inputPassword').input(config['PASSWORD'])
             page('#login').click()
