@@ -34,12 +34,9 @@ def load_config():
     # 构建配置文件的完整路径
     env_path = os.path.join(current_dir, env_file)
     
-    logging.info(f"当前操作系统: {platform.system()}")
-    logging.info(f"尝试加载配置文件: {env_path}")
     
     # 尝试加载配置文件
     if os.path.exists(env_path):
-        logging.info(f"找到配置文件: {env_path}")
         load_dotenv(env_path, override=True)
     else:
         # 尝试加载默认的 .env 文件
@@ -79,20 +76,20 @@ def perform_purchase(page):
     """执行下单流程"""
     try:
         pinner = Pinner()
-        pinner.pin('执行下单开始')
+        pinner.pin('开始下单流程')
+        
         # 点击完成配置按钮
         page('#btnCompleteProductConfig').click()
         page.wait.load_start()
-        pinner.pin('加入购物车用时')
+        pinner.pin('完成配置')
 
         page('#checkout').click()
         page.wait.load_start()
-        pinner.pin('进入结算页面用时')
+        pinner.pin('进入结算页面')
 
         page('#btnCompleteOrder').click()
         page.wait.load_start()
         time.sleep(10)
-        pinner.pin('订单提交用时')
         logging.info("订单提交成功")
         return True
         
@@ -102,31 +99,42 @@ def perform_purchase(page):
 
 def check_and_handle_login(page, config):
     try:
+        pinner = Pinner()
+        pinner.pin('开始登录流程')
+        
         page.get(config['LOGIN_URL'])
+        pinner.pin('登录页面加载完成')
+        
         time.sleep(10)
         if page.s_ele('text:欢迎回来'):
             page.stop_loading()
+            pinner.pin('已处于登录状态')
             return True
         else:
             page('#inputEmail').input(config['EMAIL'])
             page('#inputPassword').input(config['PASSWORD'])
             page('#login').click()
             page.wait.ele_displayed('text:欢迎回来', timeout=10)
+            pinner.pin('登录完成')
             return True
     except Exception as e:
         logging.error(f"登录检查过程发生错误: {e}") 
-    return False      
+    return False
 
 def agree_terms(page):
     try:
+        pinner = Pinner()
+        pinner.pin('开始同意条款流程')
+        
         # 点击复选框
         page.ele('#agreeterms').click()
+        pinner.pin('点击复选框')
         
         # 尝试多种选择器方式找到按钮
         button = (
-            page.ele('.btn-success') or  # 通过类名查找
-            page.ele('@onclick=agreeContinueOrder') or  # 通过onclick属性查找
-            page.ele('@value=我同意条款,继续购买')  # 通过value属性查找
+            page.ele('.btn-success') or  
+            page.ele('@onclick=agreeContinueOrder') or  
+            page.ele('@value=我同意条款,继续购买')  
         )
         
         if not button:
@@ -136,8 +144,8 @@ def agree_terms(page):
         button.click()
         time.sleep(10)
         page.wait.load_start()
+        pinner.pin('同意条款完成')
         
-        logging.info("已同意使用条款")
         return True
         
     except Exception as e:
@@ -155,39 +163,52 @@ def monitor_stock():
     co.set_argument('--no-sandbox') 
     browser = Chromium(co)
     page = browser.latest_tab
-    pinner = Pinner()
-    pinner.pin('脚本计时开始')
+    
+    total_pinner = Pinner()
+    total_pinner.pin('脚本启动')
 
     # 检查登录状态并处理
     if not check_and_handle_login(page, config):
         return
+    total_pinner.pin('登录完成')
     
     page.get(config['PRODUCT_URL'])  
     time.sleep(2) 
+    total_pinner.pin('产品页面加载完成')
   
     if not agree_terms(page):
         logging.error("同意条款失败")
         return
+    total_pinner.pin('同意条款完成')
     
     if config.get('PROMO_CODE'):
+        promo_pinner = Pinner()
+        promo_pinner.pin('开始使用优惠码')
+        
         page.get(config['BASE_URL']+"/cart.php?a=view")
-
         if page.s_ele('#inputPromotionCode'):
             page('#inputPromotionCode').input(config['PROMO_CODE'])
             page('@name=validatepromo').click()
             page.wait.load_start()
             page.wait.ele_displayed('@name=validatepromo', timeout=10)
-            pinner.pin('使用优惠码用时')
+            promo_pinner.pin('优惠码使用完成')
+        total_pinner.pin('优惠码处理完成')
 
     success_count = 0
     while True:
         try:
+            loop_pinner = Pinner()
+            loop_pinner.pin('开始新一轮监控')
+            
             config = load_config()     
             page.get(config['PRODUCT_URL'])     
+            loop_pinner.pin('产品页面刷新完成')
+            
             if check_stock(page):
                 if perform_purchase(page):
                     success_count += 1
-                    logging.info(f"第 {success_count} 次下单成功！继续监控新的库存...")
+                    loop_pinner.pin('下单成功')
+                    logging.info("继续监控新的库存...")
                 else:
                     logging.error("下单失败，继续监控...")
                     
