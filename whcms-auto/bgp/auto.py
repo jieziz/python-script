@@ -20,8 +20,38 @@ logging.basicConfig(
 
 def load_config():
     """加载配置文件"""
-    load_dotenv(override=True)
-    base_url = os.getenv("BASE_URL", "").rstrip('/') 
+    import platform
+    
+    # 获取当前脚本所在目录的绝对路径
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # 根据操作系统选择不同的配置文件
+    if platform.system() == 'Windows':
+        env_file = 'env.windows'
+    else:  # Linux 或其他系统
+        env_file = 'env.linux'
+    
+    # 构建配置文件的完整路径
+    env_path = os.path.join(current_dir, env_file)
+    
+    logging.info(f"当前操作系统: {platform.system()}")
+    logging.info(f"尝试加载配置文件: {env_path}")
+    
+    # 尝试加载配置文件
+    if os.path.exists(env_path):
+        logging.info(f"找到配置文件: {env_path}")
+        load_dotenv(env_path, override=True)
+    else:
+        # 尝试加载默认的 .env 文件
+        default_env = os.path.join(current_dir, '.env')
+        logging.warning(f"未找到系统特定配置文件 {env_path}，尝试加载默认配置: {default_env}")
+        if os.path.exists(default_env):
+            load_dotenv(default_env, override=True)
+        else:
+            logging.error("未找到任何配置文件！")
+            raise FileNotFoundError(f"配置文件不存在: {env_path} 或 {default_env}")
+
+    base_url = os.getenv("BASE_URL", "").rstrip('/')
     return {
         'BASE_URL': base_url,
         'PRODUCT_URL': os.getenv("PRODUCT_URL"),
@@ -74,6 +104,7 @@ def perform_purchase(page, config):
 def check_and_handle_login(page, config):
     try:
         page.get(config['LOGIN_URL'])
+        time.sleep(10)
         if page.s_ele('text:欢迎回来'):
             page.stop_loading()
             return True
