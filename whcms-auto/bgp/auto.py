@@ -4,7 +4,6 @@ from DrissionPage import Chromium, ChromiumOptions
 from dotenv import load_dotenv
 import os
 from TimePinner import Pinner
-from DrissionPage.common import Actions
 
 
 
@@ -123,6 +122,7 @@ def monitor_stock():
     co.set_load_mode('none')
     co.set_pref('credentials_enable_service', False)
     co.set_argument('--hide-crash-restore-bubble')
+    co.set_argument('--no-sandbox') 
     browser = Chromium(co)
     page = browser.latest_tab
     pinner = Pinner()
