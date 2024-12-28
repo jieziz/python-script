@@ -75,8 +75,7 @@ def check_stock(page):
         logging.warning(f"检查库存时发生错误: {e}")
         return False
 
-
-def perform_purchase(page, config):
+def perform_purchase(page):
     """执行下单流程"""
     try:
         pinner = Pinner()
@@ -109,6 +108,8 @@ def check_and_handle_login(page, config):
             page.stop_loading()
             return True
         else:
+            # 等待登录表单元素出现
+            page.wait.ele_displayed('#inputEmail', timeout=10)
             page('#inputEmail').input(config['EMAIL'])
             page('#inputPassword').input(config['PASSWORD'])
             page('#login').click()
@@ -186,7 +187,7 @@ def monitor_stock():
             config = load_config()     
             page.get(config['PRODUCT_URL'])     
             if check_stock(page):
-                if perform_purchase(page, config):
+                if perform_purchase(page):
                     success_count += 1
                     logging.info(f"第 {success_count} 次下单成功！继续监控新的库存...")
                 else:
