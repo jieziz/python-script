@@ -91,7 +91,7 @@ def perform_purchase(page):
 
         page('#btnCompleteOrder').click()
         page.wait.load_start()
-        time.sleep(30)
+        time.sleep(10)
         pinner.pin('订单提交用时')
         logging.info("订单提交成功")
         return True
