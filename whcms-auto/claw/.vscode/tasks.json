@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "bgp79-1",
+            "type": "shell",
+            "command": "python",
+            "args": ["auto.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "bgp79-2",
+            "type": "shell",
+            "command": "python",
+            "args": ["auto.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "bgp79-3",
+            "type": "shell",
+            "command": "python",
+            "args": ["auto.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "bgp79-4",
+            "type": "shell",
+            "command": "python",
+            "args": ["auto.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "bgp79-5",
+            "type": "shell",
+            "command": "python",
+            "args": ["auto.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+
+        {
+            "label": "Run All Tasks",
+            "dependsOrder": "parallel",  
+            "dependsOn": ["bgp79-1", "bgp79-2", "bgp79-3", "bgp79-4", "bgp79-5"], 
+            "group": {
+                "kind": "build",
+                "isDefault": true  
+            }
+        }
+    ]
+}
